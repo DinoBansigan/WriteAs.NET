@@ -1,0 +1,8 @@
+{
+  "profiles": {
+    "WriteAsConsoleApp": {
+      "commandName": "Project",
+      "commandLineArgs": "search dino baby caleb"
+    }
+  }
+}
