@@ -1,5 +1,8 @@
-﻿using System;
+﻿using HeyRed.MarkdownSharp;
+using HtmlAgilityPack;
+using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
@@ -68,6 +71,12 @@ namespace WriteAsConsoleApp
                     string searchKey = GetSearchKey(args, 2);
                     await Search(alias, searchKey);
                 }
+                else if (string.Compare(operation, "GenerateArchivePageMarkdown", ignoreCase: true) == 0)
+                {
+                    string alias = args[1];
+                    string fileName = args[2];
+                    await GenerateArchivePageMarkdown(alias, fileName);
+                }
                 else
                 {
                     Console.WriteLine("Cannot process command...");
@@ -91,6 +100,7 @@ namespace WriteAsConsoleApp
             helpText.AppendLine("    GetPostBySlug <alias> <slug>");
             helpText.AppendLine("    GetPostById <id>");
             helpText.AppendLine("    Search <alias> <searchKey>");
+            helpText.AppendLine("    GenerateArchivePageMarkdown <alias> <filename> [sortorder]");
             helpText.AppendLine();
             helpText.AppendLine("SORTORDER-options:");
             helpText.AppendLine("    ascending");
@@ -187,6 +197,7 @@ namespace WriteAsConsoleApp
         private static async Task GetPostBySlug(string alias, string slug)
         {
             Console.WriteLine("OPERATION: GetPostBySlug");
+            Console.WriteLine("ALIAS: " + alias);
             Console.WriteLine("SLUG: " + slug);
             using (var client = new WriteAsClient(WriteAsApiUri))
             {
@@ -224,6 +235,7 @@ namespace WriteAsConsoleApp
         private static async Task Search(string alias, string searchKey)
         {
             Console.WriteLine("OPERATION: Search");
+            Console.WriteLine("ALIAS: " + alias);
             Console.WriteLine("SEARCHKEY: " + searchKey);
             using (var client = new WriteAsClient(WriteAsApiUri))
             {
@@ -240,6 +252,152 @@ namespace WriteAsConsoleApp
                 {
                     Console.WriteLine(Environment.NewLine + "Result: " + string.Format("Could not find any post with searchKey {0}", searchKey));
                 }
+            }
+        }
+
+        private static async Task GenerateArchivePageMarkdown(string alias, string fileName, SortOrder sortOrder = SortOrder.Descending)
+        {
+            Console.WriteLine("OPERATION: GenerateArchivePageMarkdown");
+            Console.WriteLine("ALIAS: " + alias);
+            Console.WriteLine("FILENAME: " + fileName);
+            Console.WriteLine("SORTORDER: " + sortOrder.ToString());
+            using (var client = new WriteAsClient(WriteAsApiUri))
+            {
+                List<Post> allPosts = await client.GetAllPosts(alias, sortOrder);
+                if (allPosts != null && allPosts.Count > 0)
+                {
+                    string outputFolder = Path.Combine(Path.GetDirectoryName(Assembly.GetExecutingAssembly().Location), "output");
+                    if (!Directory.Exists(outputFolder))
+                    {
+                        Directory.CreateDirectory(outputFolder);
+                    }
+                    
+                    StringBuilder stringBuilder = new StringBuilder();
+                    string currentYear = DateTime.Now.Year.ToString();
+                    stringBuilder.AppendLine("<div class=\"archivePage\">");
+                    stringBuilder.AppendLine("<h1>" + currentYear + "</h1>");
+                    stringBuilder.AppendLine("<hr class=\"archivePageHr\"/>");
+
+                    foreach (var post in allPosts)
+                    {
+                        if (post.CreateDate.Year.ToString() != currentYear)
+                        {
+                            stringBuilder.AppendLine();
+                            currentYear = post.CreateDate.Year.ToString();
+                            stringBuilder.AppendLine("<h1>" + currentYear + "</h1>");
+                            stringBuilder.AppendLine("<hr class=\"archivePageHr\"/>");
+                        }
+
+                        string createDate = post.CreateDate.ToString("yyyy-MM-dd");
+                        string postTitle = GetPostTitle(post);
+                        string postUrl = "https://journal.dinobansigan.com/" + post.Slug;
+                        stringBuilder.AppendLine(string.Format("<div><a href=\"{0}\" target=\"_blank\"><span class=\"archivePageDateSpan\">{1}:</span> {2}</a></div>", postUrl, createDate, postTitle));
+                    }
+                    stringBuilder.AppendLine("</div>");
+
+                    if (!fileName.ToLower().EndsWith(".txt"))
+                    {
+                        fileName += ".txt";
+                    }
+                    string outputFileName = Path.Combine(outputFolder, fileName);
+                    Console.WriteLine("Saving markdown text to " + outputFileName);
+                    File.WriteAllText(outputFileName, stringBuilder.ToString());
+                    Console.WriteLine("Successfully saved Markdown text.");
+                }
+            }
+        }
+
+        private static string GetPostTitle(Post post)
+        {
+            string postTitle = string.Empty;
+            if (string.IsNullOrEmpty(post.Title))
+            {
+                postTitle = "Untitled Post";
+                string postContent = new Markdown().Transform(post.Body);
+                HtmlDocument doc = new HtmlDocument();
+                doc.LoadHtml(postContent);
+
+                using (StringWriter sw = new StringWriter())
+                {
+                    ConvertTo(doc.DocumentNode, sw);
+                    sw.Flush();
+                    string plainText = sw.ToString();
+                    if (!string.IsNullOrEmpty(plainText))
+                    {
+                        plainText = plainText.Replace("\r", "");
+                        plainText = plainText.Replace("\n", "");
+                        int length = plainText.Length < 50 ? plainText.Length : 50;
+                        postTitle = plainText.Substring(0, length) + "...";
+                    }
+                }
+            }
+            else
+            {
+                postTitle = post.Title;
+            }
+
+            postTitle = postTitle.Replace("#", "&#35;"); // this is to avoid triggering write.as' hashtag system
+            return postTitle;
+        }
+
+        private static void ConvertTo(HtmlNode node, TextWriter outText)
+        {
+            string html;
+            switch (node.NodeType)
+            {
+                case HtmlNodeType.Comment:
+                    // don't output comments
+                    break;
+
+                case HtmlNodeType.Document:
+                    ConvertContentTo(node, outText);
+                    break;
+
+                case HtmlNodeType.Text:
+                    // script and style must not be output
+                    string parentName = node.ParentNode.Name;
+                    if ((parentName == "script") || (parentName == "style"))
+                        break;
+
+                    // get text
+                    html = ((HtmlTextNode)node).Text;
+
+                    // is it in fact a special closing node output as text?
+                    if (HtmlNode.IsOverlappedClosingElement(html))
+                        break;
+
+                    // check the text is meaningful and not a bunch of whitespaces
+                    if (html.Trim().Length > 0)
+                    {
+                        outText.Write(HtmlEntity.DeEntitize(html));
+                    }
+                    break;
+
+                case HtmlNodeType.Element:
+                    switch (node.Name)
+                    {
+                        case "p":
+                            // treat paragraphs as crlf
+                            outText.Write("\r\n");
+                            break;
+                        case "br":
+                            outText.Write("\r\n");
+                            break;
+                    }
+
+                    if (node.HasChildNodes)
+                    {
+                        ConvertContentTo(node, outText);
+                    }
+                    break;
+            }
+        }
+
+        private static void ConvertContentTo(HtmlNode node, TextWriter outText)
+        {
+            foreach (HtmlNode subnode in node.ChildNodes)
+            {
+                ConvertTo(subnode, outText);
             }
         }
     }
