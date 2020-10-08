@@ -1,4 +1,6 @@
-﻿namespace WriteAs.NET.Client.Models
+﻿using WriteAs.NET.Client.Models;
+
+namespace WriteAs.NET.Client.Responses
 {
     public class WriteAsPostResponse
     {

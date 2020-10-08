@@ -6,6 +6,7 @@ using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
 using WriteAs.NET.Client.Models;
+using WriteAs.NET.Client.Responses;
 using WriteAs.NET.Shared;
 
 namespace WriteAs.NET
