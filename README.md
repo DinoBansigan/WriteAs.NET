@@ -1,4 +1,4 @@
-# WriteAsClient
+# WriteAs.NET
 An unofficial .NET client for the Write.as API written in C#.
 
 **Installing WriteAs.NET**
