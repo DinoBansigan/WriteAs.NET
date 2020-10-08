@@ -10,6 +10,8 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>WriteAs.NET</PackageId>
     <Product>WriteAs.NET</Product>
+    <RepositoryUrl>https://github.com/DinoBansigan/WriteAsClient</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/DinoBansigan/WriteAsClient</PackageProjectUrl>
   </PropertyGroup>
 
   <ItemGroup>
