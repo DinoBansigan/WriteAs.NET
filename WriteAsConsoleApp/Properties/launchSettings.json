@@ -1,8 +1,0 @@
-{
-  "profiles": {
-    "WriteAsConsoleApp": {
-      "commandName": "Project",
-      "commandLineArgs": "generatearchivepagemarkdown dino archivepagetest"
-    }
-  }
-}
