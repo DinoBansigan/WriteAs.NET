@@ -5,8 +5,47 @@ At the moment it only supports very basic "get" methods. I initially wrote this 
 
 **Usage Examples**  
 
-I will be uploading a .NET Core console application in the future, that will show some examples of how to use this client.
+I will be uploading a .NET Core console application that will show more concrete examples of how to use this client. But for now, you can reference the examples below.  
 
+*GetAllPosts*
+```
+using (var client = new WriteAsClient("https://write.as/"))
+{
+    List<Post> allPosts = await client.GetAllPosts(alias, sortOrder);
+}
+```
+
+*GetPostsByPageNumber*
+```
+using (var client = new WriteAsClient("https://write.as/"))
+{
+    List<Post> allPosts = await client.GetPostsByPageNumber(alias, pageNumber, sortOrder);
+}
+```
+
+*GetPostBySlug*
+```
+using (var client = new WriteAsClient("https://write.as/"))
+{
+    Post post = await client.GetPostBySlug(alias, slug);
+}
+```
+
+*GetPostById*
+```
+using (var client = new WriteAsClient("https://write.as/"))
+{
+    Post post = await client.GetPostById(postId);
+}
+```
+
+*Search*
+```
+using (var client = new WriteAsClient("https://write.as/"))
+{
+    List<Post> searchResults = await client.Search(alias, searchKey);
+}
+```
   
 **Currently Supported Operations**
 
