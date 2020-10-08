@@ -1,4 +1,4 @@
-﻿namespace WriteAs.Client
+﻿namespace WriteAs.NET.Shared
 {
     public enum SortOrder
     {

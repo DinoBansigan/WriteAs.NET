@@ -6,8 +6,9 @@ using System.IO;
 using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
-using WriteAs.Client;
-using WriteAs.Client.Models;
+using WriteAs.NET;
+using WriteAs.NET.Client.Models;
+using WriteAs.NET.Shared;
 
 namespace WriteAsConsoleApp
 {
@@ -71,11 +72,11 @@ namespace WriteAsConsoleApp
                     string searchKey = GetSearchKey(args, 2);
                     await Search(alias, searchKey);
                 }
-                else if (string.Compare(operation, "GenerateArchivePageMarkdown", ignoreCase: true) == 0)
+                else if (string.Compare(operation, "GenerateArchivePageHtml", ignoreCase: true) == 0)
                 {
                     string alias = args[1];
                     string fileName = args[2];
-                    await GenerateArchivePageMarkdown(alias, fileName);
+                    await GenerateArchivePageHtml(alias, fileName);
                 }
                 else
                 {
@@ -100,7 +101,7 @@ namespace WriteAsConsoleApp
             helpText.AppendLine("    GetPostBySlug <alias> <slug>");
             helpText.AppendLine("    GetPostById <id>");
             helpText.AppendLine("    Search <alias> <searchKey>");
-            helpText.AppendLine("    GenerateArchivePageMarkdown <alias> <filename> [sortorder]");
+            helpText.AppendLine("    GenerateArchivePageHtml <alias> <filename> [sortorder]");
             helpText.AppendLine();
             helpText.AppendLine("SORTORDER-options:");
             helpText.AppendLine("    ascending");
@@ -255,9 +256,9 @@ namespace WriteAsConsoleApp
             }
         }
 
-        private static async Task GenerateArchivePageMarkdown(string alias, string fileName, SortOrder sortOrder = SortOrder.Descending)
+        private static async Task GenerateArchivePageHtml(string alias, string fileName, SortOrder sortOrder = SortOrder.Descending)
         {
-            Console.WriteLine("OPERATION: GenerateArchivePageMarkdown");
+            Console.WriteLine("OPERATION: GenerateArchivePageHtml");
             Console.WriteLine("ALIAS: " + alias);
             Console.WriteLine("FILENAME: " + fileName);
             Console.WriteLine("SORTORDER: " + sortOrder.ToString());

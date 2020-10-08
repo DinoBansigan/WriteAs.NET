@@ -2,8 +2,8 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp3.1</TargetFramework>
-    <RootNamespace>WriteAs.Client</RootNamespace>
-    <AssemblyName>WriteAs.Client</AssemblyName>
+    <RootNamespace>WriteAs.NET</RootNamespace>
+    <AssemblyName>WriteAs.NET</AssemblyName>
     <Authors>Dino Bansigan</Authors>
     <Description>A wrapper library for the write.as API written in C#.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>

@@ -5,9 +5,10 @@ using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text.Json;
 using System.Threading.Tasks;
-using WriteAs.Client.Models;
+using WriteAs.NET.Client.Models;
+using WriteAs.NET.Shared;
 
-namespace WriteAs.Client
+namespace WriteAs.NET
 {
     public class WriteAsClient : IDisposable
     {

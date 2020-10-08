@@ -2,7 +2,7 @@
 using System.Collections.Generic;
 using System.Text.Json.Serialization;
 
-namespace WriteAs.Client.Models
+namespace WriteAs.NET.Client.Models
 {
     public class Post
     {
