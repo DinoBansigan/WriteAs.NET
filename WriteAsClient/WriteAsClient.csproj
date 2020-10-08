@@ -5,7 +5,7 @@
     <RootNamespace>WriteAs.NET</RootNamespace>
     <AssemblyName>WriteAs.NET</AssemblyName>
     <Authors>Dino Bansigan</Authors>
-    <Description>An unofficial .NET client for the write.as API written in C#.</Description>
+    <Description>An unofficial .NET client for the Write.as API written in C#.</Description>
     <PackageLicenseExpression>MIT</PackageLicenseExpression>
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>WriteAs.NET</PackageId>
