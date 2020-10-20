@@ -1,7 +1,7 @@
 ﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netcoreapp3.1</TargetFramework>
+    <TargetFrameworks>netcoreapp3.1;netstandard2.1</TargetFrameworks>
     <RootNamespace>WriteAs.NET</RootNamespace>
     <AssemblyName>WriteAs.NET</AssemblyName>
     <Authors>Dino Bansigan</Authors>
@@ -12,10 +12,17 @@
     <Product>WriteAs.NET</Product>
     <RepositoryUrl>https://github.com/DinoBansigan/WriteAsClient</RepositoryUrl>
     <PackageProjectUrl>https://github.com/DinoBansigan/WriteAsClient</PackageProjectUrl>
+    <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.0</AssemblyVersion>
+    <PackageReleaseNotes>Added support for .NET Standard 2.1. And updated Search logic to include post titles when searching.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
     <None Include="..\.editorconfig" Link=".editorconfig" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.Text.Json" Version="4.7.2" />
   </ItemGroup>
 
 </Project>

@@ -143,14 +143,15 @@ namespace WriteAs.NET
             {
                 foreach (var post in allPosts)
                 {
-                    if (post.Body.Contains(searchKey, StringComparison.OrdinalIgnoreCase))
+                    if (post.Body.Contains(searchKey, StringComparison.OrdinalIgnoreCase) ||
+                        (!string.IsNullOrEmpty(post.Title) && post.Title.Contains(searchKey, StringComparison.OrdinalIgnoreCase)))
                     {
                         searchResults.Add(post);
                     }
                 }
             }
 
-            return searchResults;
+            return searchResults;        
         }
 
         private int GetTotalNumberOfPages(int totalNumberOfPosts)
