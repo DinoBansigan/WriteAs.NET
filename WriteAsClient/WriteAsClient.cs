@@ -15,12 +15,13 @@ namespace WriteAs.NET
     {
         private static HttpClient _httpClient;
         private JsonSerializerOptions _jsonSerializerOptions;
+        private Cache _cache;
 
         private readonly string ApiCollectionsPostQueryString = "api/collections/{0}/posts?page={1}";
         private readonly string ApiCollectionsPostSlugQueryString = "api/collections/{0}/posts/{1}";
         private readonly string ApiPostQueryString = "api/posts/{0}";
 
-        public WriteAsClient(string writeAsApiUri)
+        public WriteAsClient(string writeAsApiUri, string apiKey = null, int cacheExpirationInSeconds = 300, int cacheSize = 4)
             : base()
         {
             _httpClient = new HttpClient
@@ -30,10 +31,17 @@ namespace WriteAs.NET
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+            if (!string.IsNullOrEmpty(apiKey))
+            {
+                _httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
+            }
+
             _jsonSerializerOptions = new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
             };
+
+            _cache = new Cache(cacheExpirationInSeconds, cacheSize);
         }
 
         public void Dispose()
@@ -42,32 +50,43 @@ namespace WriteAs.NET
             {
                 _httpClient.Dispose();
             }
+            if (_cache != null)
+            {
+                _cache.Dispose();
+            }
         }
 
         public async Task<List<Post>> GetAllPosts(string alias, SortOrder sortOrder = SortOrder.Descending)
         {
-            List<Post> allPosts = new List<Post>();
+            string cacheKey = string.Format("GetAllPosts-{0}", alias);
+            List<Post> allPosts = _cache.GetDataFromCache<List<Post>>(cacheKey);
 
-            // Initial pull - get first 10 posts from page 1
-            HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiCollectionsPostQueryString, alias, "1"));
-            if (response.IsSuccessStatusCode)
+            if (allPosts == null)
             {
-                string responseBody = await response.Content.ReadAsStringAsync();
-                WriteAsCollectionResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsCollectionResponse>(responseBody, _jsonSerializerOptions);
-
-                if (writeAsResponse != null && writeAsResponse.Data != null)
+                allPosts = new List<Post>();
+                // Initial pull - get first 10 posts from page 1
+                HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiCollectionsPostQueryString, alias, "1"));
+                if (response.IsSuccessStatusCode)
                 {
-                    allPosts.AddRange(writeAsResponse.Data.Posts);
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    WriteAsCollectionResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsCollectionResponse>(responseBody, _jsonSerializerOptions);
 
-                    // If there are more posts, get the rest
-                    if (writeAsResponse.Data.TotalNumberOfPosts > writeAsResponse.Data.Posts.Count)
+                    if (writeAsResponse != null && writeAsResponse.Data != null)
                     {
-                        int totalNumberOfPages = GetTotalNumberOfPages(writeAsResponse.Data.TotalNumberOfPosts);
-                        for (int i = 2; i <= totalNumberOfPages; i++)
+                        allPosts.AddRange(writeAsResponse.Data.Posts);
+
+                        // If there are more posts, get the rest
+                        if (writeAsResponse.Data.TotalNumberOfPosts > writeAsResponse.Data.Posts.Count)
                         {
-                            List<Post> posts = await GetPostsByPageNumber(alias, i);
-                            allPosts.AddRange(posts);
+                            int totalNumberOfPages = GetTotalNumberOfPages(writeAsResponse.Data.TotalNumberOfPosts);
+                            for (int i = 2; i <= totalNumberOfPages; i++)
+                            {
+                                List<Post> posts = await GetPostsByPageNumber(alias, i);
+                                allPosts.AddRange(posts);
+                            }
                         }
+
+                        _cache.SaveDataToCache<List<Post>>(cacheKey, allPosts);
                     }
                 }
             }
@@ -77,19 +96,31 @@ namespace WriteAs.NET
             return allPosts;
         }
 
-        public async Task<List<Post>> GetPostsByPageNumber(string alias, int pageNumber, SortOrder sortOrder = SortOrder.Descending)
+        public async Task<List<Post>> GetPostsByPageNumber(string alias, int pageNumber, SortOrder sortOrder = SortOrder.Descending, bool saveToCache = false)
         {
-            List<Post> posts = new List<Post>();
+            string cacheKey = string.Format("GetPostsByPageNumber-{0}-{1}", alias, pageNumber);
+            List<Post> posts = _cache.GetDataFromCache<List<Post>>(cacheKey);
 
-            HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiCollectionsPostQueryString, alias, pageNumber.ToString()));
-            if (response.IsSuccessStatusCode)
+            if (posts == null)
             {
-                string responseBody = await response.Content.ReadAsStringAsync();
-                WriteAsCollectionResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsCollectionResponse>(responseBody, _jsonSerializerOptions);
-
-                if (writeAsResponse != null && writeAsResponse.Data != null)
+                posts = new List<Post>();
+                HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiCollectionsPostQueryString, alias, pageNumber.ToString()));
+                if (response.IsSuccessStatusCode)
                 {
-                    posts.AddRange(writeAsResponse.Data.Posts);
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    WriteAsCollectionResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsCollectionResponse>(responseBody, _jsonSerializerOptions);
+
+                    if (writeAsResponse != null && writeAsResponse.Data != null)
+                    {
+                        posts.AddRange(writeAsResponse.Data.Posts);
+
+                        // Since this method is used by other methods like GetAllPosts, which already saves data to the cache, I wanted to give the option
+                        // to not save data to the cache for this method.
+                        if (saveToCache)
+                        {
+                            _cache.SaveDataToCache<List<Post>>(cacheKey, posts);
+                        }
+                    }
                 }
             }
 
@@ -100,16 +131,22 @@ namespace WriteAs.NET
 
         public async Task<Post> GetPostBySlug(string alias, string slug)
         {
-            Post post = null;
-            HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiCollectionsPostSlugQueryString, alias, slug));
-            if (response.IsSuccessStatusCode)
-            {
-                string responseBody = await response.Content.ReadAsStringAsync();
-                WriteAsPostResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsPostResponse>(responseBody, _jsonSerializerOptions);
+            string cacheKey = string.Format("GetPostBySlug-{0}-{1}", alias, slug);
+            Post post = _cache.GetDataFromCache<Post>(cacheKey);
 
-                if (writeAsResponse != null && writeAsResponse.Data != null)
+            if (post == null)
+            {
+                HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiCollectionsPostSlugQueryString, alias, slug));
+                if (response.IsSuccessStatusCode)
                 {
-                    post = writeAsResponse.Data;
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    WriteAsPostResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsPostResponse>(responseBody, _jsonSerializerOptions);
+
+                    if (writeAsResponse != null && writeAsResponse.Data != null)
+                    {
+                        post = writeAsResponse.Data;
+                        _cache.SaveDataToCache<Post>(cacheKey, post);
+                    }
                 }
             }
 
@@ -118,16 +155,22 @@ namespace WriteAs.NET
 
         public async Task<Post> GetPostById(string postId)
         {
-            Post post = null;
-            HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiPostQueryString, postId));
-            if (response.IsSuccessStatusCode)
-            {
-                string responseBody = await response.Content.ReadAsStringAsync();
-                WriteAsPostResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsPostResponse>(responseBody, _jsonSerializerOptions);
+            string cacheKey = string.Format("GetPostById-{0}", postId);
+            Post post = _cache.GetDataFromCache<Post>(cacheKey);
 
-                if (writeAsResponse != null && writeAsResponse.Data != null)
+            if (post == null)
+            {
+                HttpResponseMessage response = await _httpClient.GetAsync(string.Format(ApiPostQueryString, postId));
+                if (response.IsSuccessStatusCode)
                 {
-                    post = writeAsResponse.Data;
+                    string responseBody = await response.Content.ReadAsStringAsync();
+                    WriteAsPostResponse writeAsResponse = JsonSerializer.Deserialize<WriteAsPostResponse>(responseBody, _jsonSerializerOptions);
+
+                    if (writeAsResponse != null && writeAsResponse.Data != null)
+                    {
+                        post = writeAsResponse.Data;
+                        _cache.SaveDataToCache<Post>(cacheKey, post);
+                    }
                 }
             }
 
@@ -143,8 +186,8 @@ namespace WriteAs.NET
             {
                 foreach (var post in allPosts)
                 {
-                    if (post.Body.Contains(searchKey, StringComparison.OrdinalIgnoreCase) ||
-                        (!string.IsNullOrEmpty(post.Title) && post.Title.Contains(searchKey, StringComparison.OrdinalIgnoreCase)))
+                    if ((!string.IsNullOrEmpty(post.Title) && post.Title.Contains(searchKey, StringComparison.OrdinalIgnoreCase)) || 
+                        post.Body.Contains(searchKey, StringComparison.OrdinalIgnoreCase))
                     {
                         searchResults.Add(post);
                     }
