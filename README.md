@@ -2,7 +2,15 @@
 An unofficial .NET Core client for the Write.as API written in C#.
 
 **Update:**  
-Nuget package has been updated to version 1.1.0. This includes support for .NET Standard 2.1, which should allow you to use this package in a Blazor WASM app. And updated Search logic to include post titles when searching.
+The latest version of the source code now allows you to enter an API key when initializing a `WriteAsClient` instance. This API key will allow you to bypass the rate limiting checks on the Write.as API.
+
+Some basic in-memory caching has also been added to the client. You can configure some of the cache settings when initializing a `WriteAsClient` instance. The new settings are described below:
+- `cacheExpirationInSeconds` determines how long data will stay in the cache before it expires. The default value for this setting is 300 seconds.
+- `cacheSize` determines how many objects it can store in the cache. Note that a collection of posts (`List<Post>`) and a single post each count as 1 item. The default value for this setting is 4.
+
+Nuget package is still currently at version 1.1.0. I'll release a new version with the latest changes (api key and caching) after doing some more real world testing.
+
+---
 
 At the moment it only supports very basic "get" methods. I initially wrote this client/wrapper library just for fun. Then I started using it to build out the [Archive Page](https://journal.dinobansigan.com/archive) on my [Write.as](https://write.as/) blog/journal.
 
@@ -23,48 +31,41 @@ Task<List<Post>> Search(string alias, string searchKey, SortOrder sortOrder = So
 
 **Usage Examples**  
 
+*Initialize new instance -- Note: To avoid creating multiple socket connections, initialize a single `WriteAsClient` instance and use it throughout the whole app.*
+```
+var client = new WriteAsClient("https://write.as/", apiKey, cacheExpirationInSeconds, cacheSize);
+```
+
 *GetAllPosts*
 ```
-using (var client = new WriteAsClient("https://write.as/"))
-{
-    List<Post> allPosts = await client.GetAllPosts(alias, sortOrder);
-}
+List<Post> allPosts = await client.GetAllPosts(alias, sortOrder);
 ```
 
 *GetPostsByPageNumber*
 ```
-using (var client = new WriteAsClient("https://write.as/"))
-{
-    List<Post> allPosts = await client.GetPostsByPageNumber(alias, pageNumber, sortOrder);
-}
+List<Post> allPosts = await client.GetPostsByPageNumber(alias, pageNumber, sortOrder);
 ```
 
 *GetPostBySlug*
 ```
-using (var client = new WriteAsClient("https://write.as/"))
-{
-    Post post = await client.GetPostBySlug(alias, slug);
-}
+Post post = await client.GetPostBySlug(alias, slug);
 ```
 
 *GetPostById*
 ```
-using (var client = new WriteAsClient("https://write.as/"))
-{
-    Post post = await client.GetPostById(postId);
-}
+Post post = await client.GetPostById(postId);
 ```
 
 *Search*
 ```
-using (var client = new WriteAsClient("https://write.as/"))
-{
-    List<Post> searchResults = await client.Search(alias, searchKey);
-}
+List<Post> searchResults = await client.Search(alias, searchKey);
 ```
 
+---
   
 **Installing WriteAs.NET**
+
+Note: Nuget package is still currently at version 1.1.0. I'll release a new version with the latest changes (api key and caching) after doing some more real world testing.
 
 You can install via nuget:  
 
