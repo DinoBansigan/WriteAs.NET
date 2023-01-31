@@ -11,7 +11,7 @@ using WriteAs.NET.Shared;
 
 namespace WriteAs.NET
 {
-    public class WriteAsClient : IDisposable
+    public class WriteAsClient : IDisposable, IWriteAsClient
     {
         private static HttpClient _httpClient;
         private JsonSerializerOptions _jsonSerializerOptions;
@@ -186,7 +186,7 @@ namespace WriteAs.NET
             {
                 foreach (var post in allPosts)
                 {
-                    if ((!string.IsNullOrEmpty(post.Title) && post.Title.Contains(searchKey, StringComparison.OrdinalIgnoreCase)) || 
+                    if ((!string.IsNullOrEmpty(post.Title) && post.Title.Contains(searchKey, StringComparison.OrdinalIgnoreCase)) ||
                         post.Body.Contains(searchKey, StringComparison.OrdinalIgnoreCase))
                     {
                         searchResults.Add(post);
@@ -194,7 +194,7 @@ namespace WriteAs.NET
                 }
             }
 
-            return searchResults;        
+            return searchResults;
         }
 
         private int GetTotalNumberOfPages(int totalNumberOfPosts)
