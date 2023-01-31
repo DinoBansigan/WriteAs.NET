@@ -12,9 +12,9 @@
     <Product>WriteAs.NET</Product>
     <RepositoryUrl>https://github.com/DinoBansigan/WriteAsClient</RepositoryUrl>
     <PackageProjectUrl>https://github.com/DinoBansigan/WriteAsClient</PackageProjectUrl>
-    <Version>1.1.0</Version>
-    <AssemblyVersion>1.1.0.0</AssemblyVersion>
-    <PackageReleaseNotes>Added support for .NET Standard 2.1. And updated Search logic to include post titles when searching.</PackageReleaseNotes>
+    <Version>1.2.1</Version>
+    <AssemblyVersion>1.2.1.0</AssemblyVersion>
+    <PackageReleaseNotes>Added interface for the WriteAsClient class to allow for use with dependency injection.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
