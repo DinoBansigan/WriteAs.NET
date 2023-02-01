@@ -1,6 +1,9 @@
 # WriteAs.NET
 An unofficial .NET Core client for the Write.as API written in C#.
 
+**Update Version 1.2.1:**  
+ Added interface for the WriteAsClient class to allow for use with dependency injection.
+
 **Update Version 1.2.0:**  
 The latest version of the source code now allows you to enter an API key when initializing a `WriteAsClient` instance. This API key will allow you to bypass the rate limiting checks on the Write.as API.
 
@@ -70,10 +73,10 @@ List<Post> searchResults = await client.Search(alias, searchKey);
 
 You can install via nuget:  
 
-`Install-Package WriteAs.NET -Version 1.2.0`
+`Install-Package WriteAs.NET -Version 1.2.1`
 
 Or via the .NET Core command line interface:  
 
-`dotnet add package WriteAs.NET --version 1.2.0`
+`dotnet add package WriteAs.NET --version 1.2.1`
 
 
