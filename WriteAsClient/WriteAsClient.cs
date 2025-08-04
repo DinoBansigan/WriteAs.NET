@@ -31,6 +31,10 @@ namespace WriteAs.NET
             _httpClient.DefaultRequestHeaders.Accept.Clear();
             _httpClient.DefaultRequestHeaders.Accept.Add(new MediaTypeWithQualityHeaderValue("application/json"));
 
+            ProductHeaderValue productHeaderValue = new ProductHeaderValue(name: "WriteAs.NET", version: "1.2.2");
+            ProductInfoHeaderValue productInfoHeaderValue = new ProductInfoHeaderValue(productHeaderValue);
+            _httpClient.DefaultRequestHeaders.UserAgent.Add(productInfoHeaderValue);
+
             if (!string.IsNullOrEmpty(apiKey))
             {
                 _httpClient.DefaultRequestHeaders.Add("X-API-Key", apiKey);
