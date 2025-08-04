@@ -10,11 +10,11 @@
     <GeneratePackageOnBuild>true</GeneratePackageOnBuild>
     <PackageId>WriteAs.NET</PackageId>
     <Product>WriteAs.NET</Product>
-    <RepositoryUrl>https://github.com/DinoBansigan/WriteAsClient</RepositoryUrl>
-    <PackageProjectUrl>https://github.com/DinoBansigan/WriteAsClient</PackageProjectUrl>
-    <Version>1.2.1</Version>
-    <AssemblyVersion>1.2.1.0</AssemblyVersion>
-    <PackageReleaseNotes>Added interface for the WriteAsClient class to allow for use with dependency injection.</PackageReleaseNotes>
+    <RepositoryUrl>https://github.com/DinoBansigan/WriteAs.NET</RepositoryUrl>
+    <PackageProjectUrl>https://github.com/DinoBansigan/WriteAs.NET</PackageProjectUrl>
+    <Version>1.2.2</Version>
+    <AssemblyVersion>1.2.2.0</AssemblyVersion>
+    <PackageReleaseNotes>Added user-agent header value to allow calls to the Write.as api to go through.</PackageReleaseNotes>
   </PropertyGroup>
 
   <ItemGroup>
